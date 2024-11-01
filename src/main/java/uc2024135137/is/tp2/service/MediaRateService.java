@@ -1,5 +1,7 @@
 package uc2024135137.is.tp2.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,6 +17,8 @@ import uc2024135137.is.tp2.repository.UserRepository;
 @Service
 public class MediaRateService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MediaRateService.class);
+
     private final MediaRateRepository mediaRateRepository;
     private final MediaRepository mediaRepository;
     private final UserRepository userRepository;
@@ -25,40 +29,68 @@ public class MediaRateService {
         this.userRepository = userRepository;
     }
 
-    public Mono<Object> createMediaRate(RequestMediaRateCreate requestMediaCreate) {
+    public Mono<MediaRate> createMediaRate(RequestMediaRateCreate requestMediaCreate) {
         return mediaRateRepository.findMediaRateByUserIdAndMediaId(
                 requestMediaCreate.getUserId(),
                 requestMediaCreate.getMediaId()
-        ).flatMap(mediaRate ->
-                Mono.error(new RuntimeException("Relationship already exists"))
-        ).switchIfEmpty(Mono.defer(() ->
-             userRepository.incrementUserNumberOfRatedMedia(requestMediaCreate.getUserId())
-                    .then(mediaRepository.incrementMediaNumberOfRates(requestMediaCreate.getMediaId()).retry())
-                    .then(mediaRepository.sumMediaTotalRating(requestMediaCreate.getMediaId(), requestMediaCreate.getRate()).retry())
+        ).hasElement().flatMap(element -> {
+            if (element) {
+                LOGGER.error("User trying to rate an already rated media");
+                return Mono.error(new RuntimeException("Relationship already exists"));
+            }
+
+            return userRepository.incrementUserNumberOfRatedMedia(requestMediaCreate.getUserId())
+                    .then(mediaRepository.incrementMediaNumberOfRates(requestMediaCreate.getMediaId())
+                            .doOnSuccess(_ -> LOGGER.info("Incremented number of rates for mediaId: {}", requestMediaCreate.getMediaId()))
+                            .doOnError(_ -> LOGGER.error("Error trying to increment number of rates for mediaId: {}", requestMediaCreate.getMediaId())))
+                    .then(mediaRepository.sumMediaTotalRating(requestMediaCreate.getMediaId(), requestMediaCreate.getRate())
+                            .doOnSuccess(_ -> LOGGER.info("Increased the media total rating for mediaId: {}", requestMediaCreate.getMediaId()))
+                            .doOnError(_ -> LOGGER.error("Error trying to increase the media total rating for mediaId: {}", requestMediaCreate.getMediaId())))
                     .then(Mono.defer(() -> {
                         MediaRate mediaRate = new MediaRate();
                         mediaRate.setUserId(requestMediaCreate.getUserId());
                         mediaRate.setMediaId(requestMediaCreate.getMediaId());
                         mediaRate.setRating(requestMediaCreate.getRate());
-                        return mediaRateRepository.save(mediaRate);
-                    }))
-        ));
+                        return mediaRateRepository.save(mediaRate)
+                                .doOnSuccess(_ -> LOGGER.info("mediaId {} Rated", requestMediaCreate.getMediaId()))
+                                .doOnError(_ -> LOGGER.error("error rating mediaId {}", requestMediaCreate.getMediaId()));
+                    }));
+        });
     }
 
     public Mono<MediaRate> updateMediaRate(Long id, RequestMediaRateUpdate requestMediaRateUpdate) {
         return mediaRateRepository.findById(id).flatMap(mediaRate ->
             mediaRepository.reduceMediaTotalRating(mediaRate.getId(), mediaRate.getRating())
-                    .then(mediaRepository.sumMediaTotalRating(mediaRate.getId(), requestMediaRateUpdate.getRate()))
+                    .doOnSuccess(_ -> LOGGER.info("reducing {} rate", mediaRate.getMediaId()))
+                    .doOnError(_ -> LOGGER.error("error reducing mediaId {} rate", mediaRate.getMediaId()))
+                    .then(mediaRepository.sumMediaTotalRating(mediaRate.getId(), requestMediaRateUpdate.getRate())
+                            .doOnSuccess(_ -> LOGGER.info("increasing mediaId {} rate", mediaRate.getMediaId()))
+                            .doOnError(_ -> LOGGER.error("error increasing mediaId {} rate", mediaRate.getMediaId())))
                     .then(Mono.just(mediaRate))
         );
     }
 
     public Mono<Void> deleteMediaRateById(Long id) {
         return mediaRateRepository.findById(id).flatMap(mediaRate ->
-            userRepository.decrementUserNumberOfRatedMedia(mediaRate.getId())
-                    .then(mediaRepository.decrementMediaNumberOfRates(mediaRate.getId()).retry())
-                    .then(mediaRepository.reduceMediaTotalRating(mediaRate.getId(), mediaRate.getRating()).retry())
-                    .then(mediaRateRepository.delete(mediaRate))
+            userRepository.decrementUserNumberOfRatedMedia(mediaRate.getUserId())
+                    .doOnSuccess(_ -> LOGGER.info("decrementing number of rated medias for user {}", mediaRate.getUserId()))
+                    .doOnError(_ -> LOGGER.error("error decrementing number of rated medias for user {}", mediaRate.getUserId()))
+                    .then(mediaRepository.decrementMediaNumberOfRates(mediaRate.getId())
+                            .doOnSuccess(_ -> LOGGER.info("decrementing number of rates for media {}", mediaRate.getMediaId()))
+                            .doOnError(_ -> LOGGER.error("error decrementing  number of rates for media {}", mediaRate.getMediaId())))
+                    .then(mediaRepository.reduceMediaTotalRating(mediaRate.getId(), mediaRate.getRating())
+                            .doOnSuccess(_ -> LOGGER.info("reducing media total rating for media {}", mediaRate.getMediaId()))
+                            .doOnError(_ -> LOGGER.error("error reducing media total rating for media  {}", mediaRate.getMediaId())))
+                    .then(mediaRateRepository.delete(mediaRate)
+                            .doOnSuccess(_ -> LOGGER.info("deleting mediarate {}", mediaRate.getId()))
+                            .doOnError(_ -> LOGGER.error("error deleting mediarate {}", mediaRate.getId())))
+        );
+    }
+
+    public Mono<MediaRate> getMediaRateById(Long mediaId, Long userId) {
+        return mediaRateRepository.findMediaRateByUserIdAndMediaId(
+                userId,
+                mediaId
         );
     }
 
