@@ -36,7 +36,7 @@ public class UserService {
         User user = new User();
         user.setName(requestUserCreate.getName());
         user.setAge(requestUserCreate.getAge());
-        user.setGender(requestUserCreate.getGender());
+        user.setGender(requestUserCreate.getGender().getValue());
         user.setNumberOfRatedMedia(0L);
         return userRepository.save(user).doOnError(e -> LOGGER.error("Error creating user request {}: {}", requestUserCreate, e.getMessage()));
     }
@@ -45,7 +45,7 @@ public class UserService {
         return userRepository.findUserById(id).flatMap(user -> {
             user.setName(requestUserUpdate.getName());
             user.setAge(requestUserUpdate.getAge());
-            user.setGender(requestUserUpdate.getGender());
+            user.setGender(requestUserUpdate.getGender().getValue());
             return userRepository.save(user).doOnError(e -> LOGGER.error("Error updating user {}: {}", id, e.getMessage()));
         }).switchIfEmpty(Mono.defer(() -> {
                     LOGGER.warn("Error finding user to update by id {}", id);
