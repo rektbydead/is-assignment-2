@@ -28,4 +28,17 @@ public class User {
 
     @Version
     private Long version;
+
+    public enum Gender {
+        MALE("male"), FEMALE("female");
+
+        final String gender;
+        Gender(String gender) {
+            this.gender = gender;
+        }
+
+        public String getValue() {
+            return this.gender;
+        }
+    }
 }
