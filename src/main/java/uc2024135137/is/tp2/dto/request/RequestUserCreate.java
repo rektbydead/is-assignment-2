@@ -11,5 +11,5 @@ public class RequestUserCreate {
 
     private Short age;
 
-    private String gender;
+    private User.Gender gender;
 }
