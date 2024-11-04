@@ -41,13 +41,18 @@ public class Media {
 
     @Version
     private Long version;
-    // public enum Type {
-    //     MOVIE("movie"),
-    //     TV_SHOW("tv-show");
 
-    //     final String value;
-    //     Type(String value) {
-    //         this.value = value;
-    //     }
-    // }
+    public enum Type {
+        MOVIE("movie"),
+        TV_SHOW("tv-show");
+
+        final String value;
+        Type(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
 }
