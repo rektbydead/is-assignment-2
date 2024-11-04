@@ -36,7 +36,7 @@ public class MediaService {
 
     public Mono<Media> createMedia(RequestMediaCreate requestMediaCreate) {
         Media media = new Media();
-        media.setMediaType(requestMediaCreate.getMediaType());
+        media.setMediaType(requestMediaCreate.getMediaType().getValue());
         media.setReleaseDate(requestMediaCreate.getReleaseDate());
         media.setTitle(requestMediaCreate.getTitle());
         return mediaRepository.save(media).doOnError(e -> LOGGER.error("Error creating media request: {} - {}", requestMediaCreate, e.getMessage()));
@@ -44,7 +44,7 @@ public class MediaService {
 
     public Mono<Media> updateMedia(Long id, RequestMediaUpdate requestMediaUpdate) {
         return mediaRepository.findMediaById(id).flatMap(media -> {
-            media.setMediaType(requestMediaUpdate.getMediaType());
+            media.setMediaType(requestMediaUpdate.getMediaType().getValue());
             media.setTitle(requestMediaUpdate.getTitle());
             return mediaRepository.save(media)
                     .doOnError(e -> LOGGER.error("Error updating media {}: {}", id, e.getMessage()));
