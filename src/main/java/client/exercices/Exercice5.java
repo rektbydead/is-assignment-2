@@ -26,6 +26,9 @@ public class Exercice5 implements Callable<Flux<Object>> {
                     LocalDate lastDate = LocalDate.of(1989, 12, 31);
                     LocalDate releaseDate = media.getReleaseDate();
                     return releaseDate.isAfter(firstDate) && releaseDate.isBefore(lastDate);
-                }).sort((media1, media2) -> Double.compare(media2.getAverageRating(), media1.getAverageRating())).flatMap(Flux::just);
+                }).sort((media1, media2) -> Double.compare(media2.getAverageRating(), media1.getAverageRating()))
+                .flatMap((media) ->
+                    Flux.just(String.format("%s - %.2f", media.getTitle(), media.getAverageRating()))
+                );
     }
 }
