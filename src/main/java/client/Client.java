@@ -28,7 +28,7 @@ public class Client {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
-        List<String> questions = List.of("Titles\tand\trelease\tdates\tof\tall\tmedia\titems.",
+        List<String> questions = List.of("1.Titles\tand\trelease\tdates\tof\tall\tmedia\titems.",
                 "2. Total\tcount\tof\tmedia\titems.", "3. Total\tcount\tof\tmedia\titems\t that\tare\treally\tgood\t (i.e.,\t that\thave\tmore\t than\t8\ton\t\n" +
                         "average\trating).", "4. Total\tcount\tof\tmedia\titems\tthat\tare\tsubscribed.",
                 "5. Data\tof\tmedia\titems\tthat\tare\tfrom\tthe\t80’s\t(i.e.,\twhose\trelease\tdates\tare\tbetween\t\n" +
