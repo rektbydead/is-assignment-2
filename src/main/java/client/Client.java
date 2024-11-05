@@ -67,7 +67,7 @@ public class Client {
             writer.println(questions.get(i));
             CountDownLatch futureCountDownLatch = new CountDownLatch(1);
             future.get().doOnError(_ -> {
-                writer.println("Could not connect to server after trying 3 times");
+                writer.println("Could not connect to server.");
                 futureCountDownLatch.countDown();
             }).doOnComplete(futureCountDownLatch::countDown).subscribe(writer::println);
             futureCountDownLatch.await();
