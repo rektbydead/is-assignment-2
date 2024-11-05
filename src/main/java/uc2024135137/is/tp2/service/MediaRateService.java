@@ -28,6 +28,7 @@ public class MediaRateService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public Mono<MediaRate> createMediaRate(RequestMediaRateCreate requestMediaCreate) {
         return mediaRateRepository.findMediaRateByUserIdAndMediaId(
                 requestMediaCreate.getUserId(),
@@ -57,6 +58,7 @@ public class MediaRateService {
         });
     }
 
+    @Transactional
     public Mono<MediaRate> updateMediaRate(Long id, RequestMediaRateUpdate requestMediaRateUpdate) {
         return mediaRateRepository.findById(id).flatMap(mediaRate ->
                 mediaRepository.reduceMediaTotalRating(mediaRate.getId(), mediaRate.getRating())
@@ -73,6 +75,7 @@ public class MediaRateService {
         );
     }
 
+    @Transactional
     public Mono<Void> deleteMediaRateById(Long id) {
         return mediaRateRepository.findById(id).flatMap(mediaRate ->
                 userRepository.decrementUserNumberOfRatedMedia(mediaRate.getUserId())
