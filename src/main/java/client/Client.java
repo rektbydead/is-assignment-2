@@ -11,8 +11,10 @@ import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,8 +22,10 @@ import java.util.concurrent.*;
 
 public class Client {
 
-    public static void main(String[] args) throws InterruptedException, ExecutionException, FileNotFoundException, UnsupportedEncodingException {
+    public static void main(String[] args) throws InterruptedException, ExecutionException, IOException {
         Thread.sleep(1000);
+
+        String filename = args.length >= 1 ? args[0] : "output.txt";
 
         WebClient WEB_CLIENT = WebClient.builder()
                 .baseUrl("http://127.0.0.1:9999")
@@ -54,7 +58,7 @@ public class Client {
         ));
 
 
-        PrintWriter writer = new PrintWriter("output.txt", "UTF-8");
+        PrintWriter writer = new PrintWriter(filename, StandardCharsets.UTF_8);
         CountDownLatch countDownLatch = new CountDownLatch(runnables.size());
         ExecutorService executor = Executors.newFixedThreadPool(10);
 
@@ -66,7 +70,7 @@ public class Client {
             Future<Flux<Object>> future = fluxes.get(i);
             writer.println(questions.get(i));
             CountDownLatch futureCountDownLatch = new CountDownLatch(1);
-            future.get().doOnError(_ -> {
+            future.get().doOnError(e -> {
                 writer.println("Could not connect to server.");
                 futureCountDownLatch.countDown();
             }).doOnComplete(futureCountDownLatch::countDown).subscribe(writer::println);
