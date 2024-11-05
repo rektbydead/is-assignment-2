@@ -64,7 +64,7 @@ async function createMedia(movieTitle, movieReleaseDate) {
         body: JSON.stringify({
             "title": movieTitle,
             "releaseDate": movieReleaseDate,
-            "mediaType": "tv-show"
+            "mediaType": Math.floor(Math.random() * 2) === 0 ? "TV_SHOW" : "MOVIE"
         }),
         headers: {
             "Content-type": "application/json; charset=UTF-8"
@@ -88,7 +88,7 @@ async function createPerson(personName, age, gender) {
 }
 
 async function createRating(userId, mediaId, rate) {
-    // console.log(`${userId} - ${mediaId} - ${rate}`)
+    console.log(`${userId} - ${mediaId} - ${rate}`)
     await fetch("http://localhost:9999/mediarate", {
         method: "POST",
         body: JSON.stringify({
@@ -102,9 +102,9 @@ async function createRating(userId, mediaId, rate) {
     });
 }
 
-const NUMBER_OF_PERSON = 10000;
-const NUMBER_OF_MOVIES = 10000;
-const NUMBER_OF_RATINGS = 30000;
+const NUMBER_OF_PERSON = 1000;
+const NUMBER_OF_MOVIES = 1000;
+const NUMBER_OF_RATINGS = 5000;
 
 async function createMedias() {
     const movieTitles = generateMovieTitles(NUMBER_OF_MOVIES);
@@ -118,7 +118,7 @@ async function createPersons() {
     const randomNames = generateRandomNames(NUMBER_OF_PERSON);
     for (let i = 0; i < NUMBER_OF_PERSON; i++) {
 
-        await createPerson(randomNames[i], Math.floor(Math.random() * (80 - 1) + 1), Math.floor(Math.random() * 2) === 0 ? "man" : "women")
+        await createPerson(randomNames[i], Math.floor(Math.random() * (80 - 1) + 1), Math.floor(Math.random() * 2) === 0 ? "MALE" : "FEMALE")
     }
 }
 
@@ -134,7 +134,7 @@ async function createRatings() {
 }
 
 (async () => {
-    // await createMedias();
-    // await createPersons();
+    await createMedias();
+    await createPersons();
     await createRatings()
 })();
