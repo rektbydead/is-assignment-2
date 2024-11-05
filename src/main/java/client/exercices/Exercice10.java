@@ -32,7 +32,6 @@ public class Exercice10 implements Callable<Flux<?>> {
                 .bodyToFlux(Media.class)
                 .doOnNext(media -> mediaHashMap.put(media.getId(), media));
 
-
         Flux<User> userFlux = webClient.get()
                 .uri("/user/")
                 .retrieve()
