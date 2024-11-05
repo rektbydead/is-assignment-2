@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public class Exercice10 implements Callable<Flux<Object>> {
+public class Exercice10 implements Callable<Flux<?>> {
 
     private final WebClient webClient;
     public Exercice10(WebClient webClient) {
@@ -21,7 +21,7 @@ public class Exercice10 implements Callable<Flux<Object>> {
     }
 
     @Override
-    public Flux<Object> call() throws Exception {
+    public Flux<String> call() throws Exception {
         Map<Long, Media> mediaHashMap = new HashMap<>();
         Map<Long, User> userHashMap = new HashMap<>();
         Map<Long, List<Media>> mediasRatedByUser = new HashMap<>();

@@ -7,7 +7,7 @@ import uc2024135137.is.tp2.model.Media;
 
 import java.util.concurrent.Callable;
 
-public class Exercice8 implements Callable<Flux<Object>> {
+public class Exercice8 implements Callable<Flux<?>> {
 
     private final WebClient webClient;
     public Exercice8(WebClient webClient) {
@@ -15,7 +15,7 @@ public class Exercice8 implements Callable<Flux<Object>> {
     }
 
     @Override
-    public Flux<Object> call() throws Exception {
+    public Flux<Double> call() throws Exception {
         return webClient.get()
                 .uri("/media/")
                 .retrieve()

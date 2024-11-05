@@ -14,7 +14,7 @@ import uc2024135137.is.tp2.model.User;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-public class Exercice9 implements Callable<Flux<Object>> {
+public class Exercice9 implements Callable<Flux<?>> {
 
     private final WebClient webClient;
     public Exercice9(WebClient webClient) {
@@ -22,7 +22,7 @@ public class Exercice9 implements Callable<Flux<Object>> {
     }
 
     @Override
-    public Flux<Object> call() throws Exception {
+    public Flux<String> call() throws Exception {
         Map<Long, Media> mediaHashMap = new HashMap<>();
         Map<Long, User> userHashMap = new HashMap<>();
         Map<Long, List<User>> usersThatRatedMedia = new HashMap<>();

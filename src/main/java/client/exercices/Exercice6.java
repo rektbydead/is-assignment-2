@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.DoubleSummaryStatistics;
 import java.util.concurrent.Callable;
 
-public class Exercice6 implements Callable<Flux<Object>> {
+public class Exercice6 implements Callable<Flux<?>> {
 
     private final WebClient webClient;
     public Exercice6(WebClient webClient) {
@@ -18,7 +18,7 @@ public class Exercice6 implements Callable<Flux<Object>> {
     }
 
     @Override
-    public Flux<Object> call() throws Exception {
+    public Flux<String> call() throws Exception {
         return webClient.get()
                 .uri("/media/")
                 .retrieve()

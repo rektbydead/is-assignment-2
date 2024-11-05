@@ -3,6 +3,7 @@ package uc2024135137.is.tp2.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import uc2024135137.is.tp2.dto.request.RequestMediaRateCreate;
@@ -66,7 +67,9 @@ public class MediaRateService {
                         .doOnError(_ -> LOGGER.error("error reducing mediaId {} rate", mediaRate.getMediaId()))
                         .then(mediaRepository.sumMediaTotalRating(mediaRate.getId(), requestMediaRateUpdate.getRate())
                                 .doOnSuccess(_ -> LOGGER.info("increasing mediaId {} rate", mediaRate.getMediaId()))
-                                .doOnError(_ -> LOGGER.error("error increasing mediaId {} rate", mediaRate.getMediaId())))
+                                .doOnError(_ ->
+                                        LOGGER.error("error increasing mediaId {} rate", mediaRate.getMediaId())
+                                ))
                         .then(Mono.just(mediaRate))
         ).switchIfEmpty(Mono.defer(() -> {
                 LOGGER.warn("Error finding media rate to update by id {}", id);

@@ -11,7 +11,7 @@ import uc2024135137.is.tp2.model.MediaRate;
 import java.time.Duration;
 import java.util.concurrent.Callable;
 
-public class Exercice1 implements Callable<Flux<Object>> {
+public class Exercice1 implements Callable<Flux<?>> {
 
     private final WebClient webClient;
     public Exercice1(WebClient webClient) {
@@ -19,7 +19,7 @@ public class Exercice1 implements Callable<Flux<Object>> {
     }
 
     @Override
-    public Flux<Object> call() throws Exception {
+    public Flux<String> call() throws Exception {
         return webClient.get()
                 .uri("/media/")
                 .retrieve()

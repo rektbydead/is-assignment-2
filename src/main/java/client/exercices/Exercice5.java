@@ -3,12 +3,16 @@ package client.exercices;
 import client.Client;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import uc2024135137.is.tp2.model.Media;
 
 import java.time.LocalDate;
 import java.util.concurrent.Callable;
 
-public class Exercice5 implements Callable<Flux<Object>> {
+public class Exercice5 implements Callable<Flux<?>> {
+
+    private final LocalDate FIRST_DATE = LocalDate.of(1980, 1, 1);
+    private final LocalDate LAST_DATE = LocalDate.of(1989, 12, 31);
 
     private final WebClient webClient;
     public Exercice5(WebClient webClient) {
@@ -16,19 +20,17 @@ public class Exercice5 implements Callable<Flux<Object>> {
     }
 
     @Override
-    public Flux<Object> call() throws Exception {
+    public Flux<String> call() throws Exception {
         return webClient.get()
                 .uri("/media/")
                 .retrieve()
                 .bodyToFlux(Media.class)
                 .filter(media -> {
-                    LocalDate firstDate = LocalDate.of(1980, 1, 1);
-                    LocalDate lastDate = LocalDate.of(1989, 12, 31);
                     LocalDate releaseDate = media.getReleaseDate();
-                    return releaseDate.isAfter(firstDate) && releaseDate.isBefore(lastDate);
+                    return releaseDate.isAfter(FIRST_DATE) && releaseDate.isBefore(LAST_DATE);
                 }).sort((media1, media2) -> Double.compare(media2.getAverageRating(), media1.getAverageRating()))
                 .flatMap((media) ->
-                    Flux.just(String.format("%s - %.2f", media.getTitle(), media.getAverageRating()))
+                    Mono.just(String.format("%s - %.2f", media.getTitle(), media.getAverageRating()))
                 );
     }
 }

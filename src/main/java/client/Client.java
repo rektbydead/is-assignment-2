@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -43,7 +44,7 @@ public class Client {
                         "order.", "10. Complete\tdata\tof\tall\tusers,\tby\tadding\tthe\tnames\tof\tsubscribed\tmedia\titems.", "11. Exercise error -> Retry 3 times", "11. Exercise error -> Retry 3 times with maximom of 15s wait");
 
 
-        List<Callable<Flux<Object>>> runnables = new ArrayList<>(Arrays.asList(
+        List<Callable<Flux<?>>> runnables = new ArrayList<>(Arrays.asList(
                 new Exercice1(WEB_CLIENT),
                 new Exercice2(WEB_CLIENT),
                 new Exercice3(WEB_CLIENT),
@@ -54,33 +55,32 @@ public class Client {
                 new Exercice8(WEB_CLIENT),
                 new Exercice9(WEB_CLIENT),
                 new Exercice10(WEB_CLIENT)
-                // new ExerciceError1()
         ));
 
-
         PrintWriter writer = new PrintWriter(filename, StandardCharsets.UTF_8);
-        CountDownLatch countDownLatch = new CountDownLatch(runnables.size());
         ExecutorService executor = Executors.newFixedThreadPool(10);
 
         System.out.println("Starting now.");
         long start = System.currentTimeMillis();
-        List<Future<Flux<Object>>> fluxes = executor.invokeAll(runnables);
 
-        for (int i = 0; i < fluxes.size(); i++) {
-            Future<Flux<Object>> future = fluxes.get(i);
+        List<Future<Flux<?>>> futures = executor.invokeAll(runnables);
+
+        for (int i = 0; i < futures.size(); i++) {
+            Future<Flux<?>> future = futures.get(i);
             writer.println(questions.get(i));
             CountDownLatch futureCountDownLatch = new CountDownLatch(1);
+
             future.get().doOnError(e -> {
-                writer.println("Could not connect to server.");
-                futureCountDownLatch.countDown();
-            }).doOnComplete(futureCountDownLatch::countDown).subscribe(writer::println);
+                        //writer.println("Could not connect to server.");
+                        futureCountDownLatch.countDown();
+                    }).doOnComplete(futureCountDownLatch::countDown)
+                    .subscribe(result -> writer.println("Result: " + result.toString()));
+
             futureCountDownLatch.await();
-            countDownLatch.countDown();
         }
 
         System.out.println("Just ended: " + (System.currentTimeMillis() - start) + " ms");
 
-        countDownLatch.await();
         writer.close();
         executor.shutdown();
     }

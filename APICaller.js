@@ -99,12 +99,12 @@ async function createRating(userId, mediaId, rate) {
         headers: {
             "Content-type": "application/json; charset=UTF-8"
         }
-    });
+    })
 }
 
-const NUMBER_OF_PERSON = 1000;
-const NUMBER_OF_MOVIES = 1000;
-const NUMBER_OF_RATINGS = 5000;
+const NUMBER_OF_PERSON = 10000;
+const NUMBER_OF_MOVIES = 10000;
+const NUMBER_OF_RATINGS = 50000;
 
 async function createMedias() {
     const movieTitles = generateMovieTitles(NUMBER_OF_MOVIES);
@@ -125,16 +125,19 @@ async function createPersons() {
 
 async function createRatings() {
     for (let i = 0; i < NUMBER_OF_RATINGS; i++) {
-         await createRating(
-            Math.floor(Math.random() * (NUMBER_OF_PERSON - 1) + 1),
-            Math.floor(Math.random() * (NUMBER_OF_MOVIES - 1) + 1),
-            Math.random() * 10
-        )
+    setTimeout(function timer() {
+        createRating(
+                    Math.floor(Math.random() * (NUMBER_OF_PERSON - 1) + 1),
+                    Math.floor(Math.random() * (NUMBER_OF_MOVIES - 1) + 1),
+                    Math.random() * 10
+                )
+        }, i * 10)
     }
 }
 
 (async () => {
-    await createMedias();
-    await createPersons();
-    await createRatings()
+    // await createMedias();
+    // await createPersons();
+    // await createRatings()
+    createRatings()
 })();
