@@ -29,7 +29,7 @@ public class Exercice1 implements Callable<Flux<?>> {
                         .doBeforeRetry(retrySignal -> System.out.println("ExerciseError1: Retrying due to: " + retrySignal.failure().getMessage()))
                 )
                 .map(media->
-                        "Title: " + media.getTitle() + "; Release date: " + media.getReleaseDate()
+                        "("+ media.getId() +") Title: " + media.getTitle() + "; Release date: " + media.getReleaseDate()
                 );
     }
 }

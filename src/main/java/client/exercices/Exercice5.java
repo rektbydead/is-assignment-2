@@ -34,7 +34,7 @@ public class Exercice5 implements Callable<Flux<?>> {
                     return releaseDate.isAfter(FIRST_DATE) && releaseDate.isBefore(LAST_DATE);
                 }).sort((media1, media2) -> Double.compare(media2.getAverageRating(), media1.getAverageRating()))
                 .map((media) ->
-                    String.format("%s - %.2f", media.getTitle(), media.getAverageRating())
+                    String.format("(%d) %s - %.2f", media.getId(), media.getTitle(), media.getAverageRating())
                 );
     }
 }

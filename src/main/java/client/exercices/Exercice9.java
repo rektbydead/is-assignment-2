@@ -49,12 +49,18 @@ public class Exercice9 implements Callable<Flux<?>> {
         return Flux.zip(mediaRateMono, userListMono).flatMap(tuple ->
             mediaFlux.flatMap(media -> {
                 List<MediaRate> mediaRateList = tuple.getT1().getOrDefault(media.getId(), new ArrayList<>());
+                List<User> userList = new ArrayList<>();
+
+                for (MediaRate mediaRate : mediaRateList) {
+                    userList.add(tuple.getT2().get(mediaRate.getUserId()));
+                }
+
+                userList.sort((user1, user2) -> Short.compare(user2.getAge(), user1.getAge()));
 
                 StringBuilder stringBuilder = new StringBuilder("(" + media.getId() + ") " + media.getTitle() + "; Users (" + mediaRateList.size() + "): ");
 
-                for (MediaRate mediarate : mediaRateList) {
-                    User user = tuple.getT2().get(mediarate.getUserId());
-                    stringBuilder.append(user.getName()).append(", ");
+                for (User user : userList) {
+                    stringBuilder.append(user.getName()).append("(").append(user.getAge()).append("), ");
                 }
 
                 return Mono.just(stringBuilder.toString());
