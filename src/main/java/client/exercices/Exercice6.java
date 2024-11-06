@@ -30,15 +30,15 @@ public class Exercice6 implements Callable<Flux<?>> {
                     value[2] += 1;                    // Count of ratings
                     return value;
                 })
-                .flatMapMany(acc -> {
+                .map(acc -> {
                     if (acc[2] == 0) {
-                        return Flux.just("No ratings available.");
+                        return "No ratings available.";
                     }
 
                     double mean = acc[0] / acc[2];
                     double variance = (acc[1] / acc[2]) - (mean * mean);
                     double stdDev = Math.sqrt(variance);
-                    return Flux.just(String.format("Average rating: %.2f, Standard deviation: %.2f", mean, stdDev));
-                });
+                    return String.format("Average rating: %.2f, Standard deviation: %.2f", mean, stdDev);
+                }).flux();
     }
 }

@@ -23,53 +23,42 @@ public class Exercice9 implements Callable<Flux<?>> {
 
     @Override
     public Flux<String> call() throws Exception {
-        Map<Long, Media> mediaHashMap = new HashMap<>();
-        Map<Long, User> userHashMap = new HashMap<>();
-        Map<Long, List<User>> usersThatRatedMedia = new HashMap<>();
-
         Flux<Media> mediaFlux = webClient.get()
                 .uri("/media/")
                 .retrieve()
-                .bodyToFlux(Media.class)
-                .doOnNext(media -> mediaHashMap.put(media.getId(), media));
+                .bodyToFlux(Media.class);
 
+        Mono<Map<Long, List<MediaRate>>> mediaRateMono = webClient.get()
+                .uri("/mediarate/")
+                .retrieve()
+                .bodyToFlux(MediaRate.class)
+                .reduce(new HashMap<>(), (map, mediaRate) -> {
+                    map.computeIfAbsent(mediaRate.getMediaId(), _ -> new ArrayList<>()).add(mediaRate);
+                    return map;
+                });
 
-        Flux<User> userFlux = webClient.get()
+        Mono<Map<Long, User>> userListMono = webClient.get()
                 .uri("/user/")
                 .retrieve()
                 .bodyToFlux(User.class)
-                .doOnNext(user -> userHashMap.put(user.getId(), user));
+                .reduce(new HashMap<>(), (map, user) -> {
+                    map.put(user.getId(), user);
+                    return map;
+                });
 
-        return Flux.merge(mediaFlux, userFlux).thenMany(
-                webClient.get()
-                    .uri("/mediarate/")
-                    .retrieve()
-                    .bodyToFlux(MediaRate.class)
-                    .doOnNext(mediaRate -> {
-                        if (!usersThatRatedMedia.containsKey(mediaRate.getMediaId())) {
-                            usersThatRatedMedia.put(mediaRate.getMediaId(), new ArrayList<>());
-                        }
+        return Flux.zip(mediaRateMono, userListMono).flatMap(tuple ->
+            mediaFlux.flatMap(media -> {
+                List<MediaRate> mediaRateList = tuple.getT1().getOrDefault(media.getId(), new ArrayList<>());
 
-                        User user = userHashMap.get(mediaRate.getUserId());
-                        usersThatRatedMedia.get(mediaRate.getMediaId()).add(user);
-                    })
-                    .thenMany(Flux.fromIterable(usersThatRatedMedia.entrySet())
-                                    .flatMap(entry -> {
-                                        Long mediaId = entry.getKey();
-                                        List<User> users = entry.getValue();
+                StringBuilder stringBuilder = new StringBuilder("(" + media.getId() + ") " + media.getTitle() + "; Users (" + mediaRateList.size() + "): ");
 
-                                        users.sort((user1, user2) -> user2.getAge().compareTo(user1.getAge()));
+                for (MediaRate mediarate : mediaRateList) {
+                    User user = tuple.getT2().get(mediarate.getUserId());
+                    stringBuilder.append(user.getName()).append(", ");
+                }
 
-                                        Media media = mediaHashMap.get(mediaId);
-                                        StringBuilder stringBuilder = new StringBuilder("(" + media.getId() + ") " + media.getTitle() + "; Users (" + users.size() + "): ");
-
-                                        for (User user : users) {
-                                            stringBuilder.append(user.getName()).append(" (").append(user.getAge()).append("), ");
-                                        }
-
-                                        return Flux.just(stringBuilder.toString());
-                                })
-                    )
+                return Mono.just(stringBuilder.toString());
+            })
         );
     }
 }

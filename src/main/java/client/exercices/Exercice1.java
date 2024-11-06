@@ -28,8 +28,8 @@ public class Exercice1 implements Callable<Flux<?>> {
                         .fixedDelay(3, Duration.ofSeconds(1))
                         .doBeforeRetry(retrySignal -> System.out.println("ExerciseError1: Retrying due to: " + retrySignal.failure().getMessage()))
                 )
-                .flatMap(media->
-                        Mono.just("Title: " + media.getTitle() + "; Release date: " + media.getReleaseDate())
+                .map(media->
+                        "Title: " + media.getTitle() + "; Release date: " + media.getReleaseDate()
                 );
     }
 }

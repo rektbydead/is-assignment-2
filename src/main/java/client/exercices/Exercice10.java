@@ -3,6 +3,7 @@ package client.exercices;
 import client.Client;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import uc2024135137.is.tp2.model.Media;
 import uc2024135137.is.tp2.model.MediaRate;
 import uc2024135137.is.tp2.model.User;
@@ -21,51 +22,43 @@ public class Exercice10 implements Callable<Flux<?>> {
     }
 
     @Override
-    public Flux<String> call() throws Exception {
-        Map<Long, Media> mediaHashMap = new HashMap<>();
-        Map<Long, User> userHashMap = new HashMap<>();
-        Map<Long, List<Media>> mediasRatedByUser = new HashMap<>();
-
-        Flux<Media> mediaFlux = webClient.get()
-                .uri("/media/")
-                .retrieve()
-                .bodyToFlux(Media.class)
-                .doOnNext(media -> mediaHashMap.put(media.getId(), media));
-
+    public Flux<Object> call() throws Exception {
         Flux<User> userFlux = webClient.get()
                 .uri("/user/")
                 .retrieve()
-                .bodyToFlux(User.class)
-                .doOnNext(user -> userHashMap.put(user.getId(), user));
+                .bodyToFlux(User.class);
 
-        return Flux.merge(mediaFlux, userFlux).thenMany(
-                webClient.get()
-                    .uri("/mediarate/")
-                    .retrieve()
-                    .bodyToFlux(MediaRate.class)
-                    .doOnNext(mediaRate -> {
-                        if (!mediasRatedByUser.containsKey(mediaRate.getUserId())) {
-                            mediasRatedByUser.put(mediaRate.getUserId(), new ArrayList<>());
-                        }
+        Mono<Map<Long, List<MediaRate>>> mediaRateFlux = webClient.get()
+                .uri("/mediarate/")
+                .retrieve()
+                .bodyToFlux(MediaRate.class)
+                .reduce(new HashMap<>(), (map, mediaRate) -> {
+                    map.computeIfAbsent(mediaRate.getUserId(), _ -> new ArrayList<>()).add(mediaRate);
+                    return map;
+                });
 
-                        Media media = mediaHashMap.get(mediaRate.getMediaId());
-                        mediasRatedByUser.get(mediaRate.getUserId()).add(media);
-                    })
-                    .thenMany(Flux.fromIterable(mediasRatedByUser.entrySet())
-                                    .flatMap(entry -> {
-                                        Long userId = entry.getKey();
-                                        List<Media> medias = entry.getValue();
+        Mono<Map<Long, Media>> mediaMapMono = webClient.get()
+                .uri("/media/")
+                .retrieve()
+                .bodyToFlux(Media.class)
+                .reduce(new HashMap<>(), (map, media) -> {
+                    map.put(media.getId(), media);
+                    return map;
+                });
 
-                                        User user = userHashMap.get(userId);
-                                        StringBuilder stringBuilder = new StringBuilder("(" + user.getId() + ") " + user.getName() + "; Medias (" + medias.size() + "): ");
+        return Flux.zip(mediaRateFlux, mediaMapMono).flatMap(tuple ->
+            userFlux.flatMap(user -> {
+                List<MediaRate> mediaRateList = tuple.getT1().getOrDefault(user.getId(), new ArrayList<>());
 
-                                        for (Media media : medias) {
-                                            stringBuilder.append(media.getTitle()).append(", ");
-                                        }
+                StringBuilder stringBuilder = new StringBuilder("(" + user.getId() + ") " + user.getName() + "; Medias (" + mediaRateList.size() + "): ");
+                for (MediaRate mediarate : mediaRateList) {
+                    Media media = tuple.getT2().get(mediarate.getUserId());
+                    stringBuilder.append(media.getTitle()).append(", ");
+                }
 
-                                        return Flux.just(stringBuilder.toString());
-                                })
-                    )
+                return Mono.just(stringBuilder.toString());
+            })
         );
     }
+
 }
