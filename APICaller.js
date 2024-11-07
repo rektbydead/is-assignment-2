@@ -136,8 +136,8 @@ async function createRatings() {
 }
 
 (async () => {
-    // await createMedias();
+     await createMedias();
     // await createPersons();
     // await createRatings()
-    createRatings()
+    //createRatings()
 })();

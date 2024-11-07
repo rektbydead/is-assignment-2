@@ -13,6 +13,7 @@ import uc2024135137.is.tp2.model.User;
 
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Exercice9 implements Callable<Flux<?>> {
 
@@ -32,7 +33,7 @@ public class Exercice9 implements Callable<Flux<?>> {
                 .uri("/mediarate/")
                 .retrieve()
                 .bodyToFlux(MediaRate.class)
-                .reduce(new HashMap<>(), (map, mediaRate) -> {
+                .reduce(new ConcurrentHashMap<>(), (map, mediaRate) -> {
                     map.computeIfAbsent(mediaRate.getMediaId(), _ -> new ArrayList<>()).add(mediaRate);
                     return map;
                 });
@@ -41,7 +42,7 @@ public class Exercice9 implements Callable<Flux<?>> {
                 .uri("/user/")
                 .retrieve()
                 .bodyToFlux(User.class)
-                .reduce(new HashMap<>(), (map, user) -> {
+                .reduce(new ConcurrentHashMap<>(), (map, user) -> {
                     map.put(user.getId(), user);
                     return map;
                 });

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Exercice10 implements Callable<Flux<?>> {
 
@@ -32,7 +33,7 @@ public class Exercice10 implements Callable<Flux<?>> {
                 .uri("/mediarate/")
                 .retrieve()
                 .bodyToFlux(MediaRate.class)
-                .reduce(new HashMap<>(), (map, mediaRate) -> {
+                .reduce(new ConcurrentHashMap<>(), (map, mediaRate) -> {
                     map.computeIfAbsent(mediaRate.getUserId(), _ -> new ArrayList<>()).add(mediaRate);
                     return map;
                 });
@@ -41,7 +42,7 @@ public class Exercice10 implements Callable<Flux<?>> {
                 .uri("/media/")
                 .retrieve()
                 .bodyToFlux(Media.class)
-                .reduce(new HashMap<>(), (map, media) -> {
+                .reduce(new ConcurrentHashMap<>(), (map, media) -> {
                     map.put(media.getId(), media);
                     return map;
                 });
